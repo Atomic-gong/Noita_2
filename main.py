@@ -2,6 +2,7 @@ import pygame
 from random import randint
 from enum import Enum, auto
 from typing import Tuple
+print("Imports successful")
 
 pygame.init()
 
@@ -15,11 +16,17 @@ class Comp(Enum):
 cols = 640
 rows = 480
 res = (cols, rows)
+print(f"Screen res: {res}")
+
 world = [None for _ in range(res[0] * res[1])]
+
+print(f"World size: {len(world)}")
 
 scr = pygame.display.set_mode(res)
 
 brush_size = 20
+
+print(f"Brush size: {brush_size}")
 
 class Element:
     def __init__(self, density: float, colour: Tuple, comps: Tuple[Comp]) -> None:
@@ -32,58 +39,58 @@ class Particle:
         self.element = element
         self.x = x
         self.y = y
-    def update(self):
+    def update(self, buffer_world):
         moved_down = False
 
         for c in self.element.comps:
             if c == Comp.FALLDOWN:
                 if self.y >= rows - 1: continue
-                if world[(self.y + 1) * cols + self.x] is not None: continue
-                world[self.y * cols + self.x] = None
+                if buffer_world[(self.y + 1) * cols + self.x] is not None: continue
+                buffer_world[self.y * cols + self.x] = None
                 self.y += 1
                 moved_down = True
-                world[self.y * cols + self.x] = self
+                buffer_world[self.y * cols + self.x] = self
             elif c == Comp.FLOATUP:
                 if self.y <= 0: continue
-                if world[(self.y - 1) * cols + self.x] is not None: continue
-                world[self.y * cols + self.x] = None
+                if buffer_world[(self.y - 1) * cols + self.x] is not None: continue
+                buffer_world[self.y * cols + self.x] = None
                 self.y -= 1
-                world[self.y * cols + self.x] = self
+                buffer_world[self.y * cols + self.x] = self
             elif c == Comp.SAND_SPREAD:
                 if self.x < 1 or self.x > cols - 2 or moved_down or self.y >= rows-1: continue
                 if randint(0, 1) == 0:
-                    if world[(self.y+1) * cols + self.x + 1] is None:
-                        world[self.y * cols + self.x] = None
+                    if buffer_world[(self.y+1) * cols + self.x + 1] is None:
+                        buffer_world[self.y * cols + self.x] = None
                         self.y += 1
                         self.x += 1
-                        world[self.y * cols + self.x] = self
-                elif world[(self.y+1) * cols + self.x - 1] is None:
-                    world[self.y * cols + self.x] = None
+                        buffer_world[self.y * cols + self.x] = self
+                elif buffer_world[(self.y+1) * cols + self.x - 1] is None:
+                    buffer_world[self.y * cols + self.x] = None
                     self.x -= 1
                     self.y += 1
-                    world[self.y * cols + self.x] = self
+                    buffer_world[self.y * cols + self.x] = self
             elif c == Comp.WATER_SPREAD:
                 if self.x < 1 or self.x > cols - 2 or moved_down: continue
                 if randint(0, 1) == 0:
-                    if world[(self.y) * cols + self.x + 1] is None:
-                        world[self.y * cols + self.x] = None
+                    if buffer_world[(self.y) * cols + self.x + 1] is None:
+                        buffer_world[self.y * cols + self.x] = None
                         self.x += 1
-                        world[self.y * cols + self.x] = self
-                elif world[(self.y) * cols + self.x - 1] is None:
-                    world[self.y * cols + self.x] = None
+                        buffer_world[self.y * cols + self.x] = self
+                elif buffer_world[(self.y) * cols + self.x - 1] is None:
+                    buffer_world[self.y * cols + self.x] = None
                     self.x -= 1
-                    world[self.y * cols + self.x] = self
+                    buffer_world[self.y * cols + self.x] = self
             elif c == Comp.STEAM_SPREAD:
                 if self.x < 1 or self.x > cols - 2: continue
                 if randint(0, 1) == 0:
-                    if world[(self.y) * cols + self.x + 1] is None:
-                        world[self.y * cols + self.x] = None
+                    if buffer_world[(self.y) * cols + self.x + 1] is None:
+                        buffer_world[self.y * cols + self.x] = None
                         self.x += 1
-                        world[self.y * cols + self.x] = self
-                elif world[(self.y) * cols + self.x - 1] is None:
-                    world[self.y * cols + self.x] = None
+                        buffer_world[self.y * cols + self.x] = self
+                elif buffer_world[(self.y) * cols + self.x - 1] is None:
+                    buffer_world[self.y * cols + self.x] = None
                     self.x -= 1
-                    world[self.y * cols + self.x] = self
+                    buffer_world[self.y * cols + self.x] = self
             else:
                 raise Exception("Incorrect component")
 
@@ -92,6 +99,10 @@ mode = 2
 sand = Element(1.0, (255,236,112), (Comp.FALLDOWN, Comp.SAND_SPREAD))
 water = Element(0.9, (51,102,255), (Comp.FALLDOWN, Comp.WATER_SPREAD))
 steam = Element(0.2, (230,234,240), (Comp.FLOATUP, Comp.STEAM_SPREAD))
+
+print(f"Sand: {sand}")
+print(f"Water: {water}")
+print(f"Steam: {steam}")
 
 def control():
     global mode
@@ -119,14 +130,20 @@ def control():
                     elif mode == 3:
                         world[y*cols + x] = Particle(steam, x, y)
 
+print("Entering main loop")
+
 while __name__ == "__main__":
     scr.fill((0,0,0))
     control()
-    rev_world = reversed(world)
-    for i in rev_world:
+    #buffer_world = list(reversed(world))
+    buffer_world = []
+    for i in world:
+        buffer_world.append(i)
+    for i in buffer_world:
         if i == None: continue
-        i.update()
+        i.update(buffer_world)
         scr.set_at((i.x, i.y), i.element.colour)
+    world = buffer_world
     for e in pygame.event.get():
         if e.type == pygame.QUIT:
             pygame.quit()
