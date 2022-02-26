@@ -50,7 +50,18 @@ class Particle:
                 self.y -= 1
                 world[self.y * cols + self.x] = self
             elif c == Comp.SAND_SPREAD:
-                pass
+                if self.x < 1 or self.x > cols - 2 or moved_down or self.y >= rows-1: continue
+                if randint(0, 1) == 0:
+                    if world[(self.y+1) * cols + self.x + 1] is None:
+                        world[self.y * cols + self.x] = None
+                        self.y += 1
+                        self.x += 1
+                        world[self.y * cols + self.x] = self
+                elif world[(self.y+1) * cols + self.x - 1] is None:
+                    world[self.y * cols + self.x] = None
+                    self.x -= 1
+                    self.y += 1
+                    world[self.y * cols + self.x] = self
             elif c == Comp.WATER_SPREAD:
                 if self.x < 1 or self.x > cols - 2 or moved_down: continue
                 if randint(0, 1) == 0:
@@ -93,17 +104,20 @@ def control():
     if keys[pygame.K_3]:
         mode = 3
 
-    if pygame.mouse.get_pressed()[0]:
+    if pygame.mouse.get_pressed()[0] or pygame.mouse.get_pressed()[2]:
         mx, my = pygame.mouse.get_pos()
         for x in range(max(0, mx - brush_size), min(cols - 1, mx + brush_size)):
             for y in range(max(0, my - brush_size), min(rows - 1, my + brush_size)):
                 if (mx - x) ** 2 + (my - y) ** 2 > brush_size ** 2: continue
-                if mode == 1:
-                    world[y*cols + x] = Particle(sand, x, y)
-                elif mode == 2:
-                    world[y*cols + x] = Particle(water, x, y)
-                elif mode == 3:
-                    world[y*cols + x] = Particle(steam, x, y)
+                if pygame.mouse.get_pressed()[2]:
+                    world[y*cols + x] = None
+                else:
+                    if mode == 1:
+                        world[y*cols + x] = Particle(sand, x, y)
+                    elif mode == 2:
+                        world[y*cols + x] = Particle(water, x, y)
+                    elif mode == 3:
+                        world[y*cols + x] = Particle(steam, x, y)
 
 while __name__ == "__main__":
     scr.fill((0,0,0))
