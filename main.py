@@ -2,14 +2,18 @@
 import pygame
 from random import randint
 from enum import Enum, auto
+import colorama
 from typing import Tuple
 print("Imports successful")
 
 pygame.init()
+colorama.init()
+print("Modules initialised")
 
 class Comp(Enum):
     FALLDOWN = auto()
     FLOATUP = auto()
+    SPREAD = auto()
     SAND_SPREAD = auto()
     WATER_SPREAD = auto()
     STEAM_SPREAD = auto()
@@ -127,11 +131,22 @@ sand = Element(1.0, (255,236,112), (Comp.FALLDOWN, Comp.SAND_SPREAD))
 water = Element(0.9, (51,102,255), (Comp.FALLDOWN, Comp.WATER_SPREAD))
 steam = Element(0.2, (230,234,240), (Comp.FLOATUP, Comp.STEAM_SPREAD))
 acid = Element(0.2, (0,234,0), (Comp.FALLDOWN, Comp.ACID_SPREAD))
+lava = Element(0.2, (255, 153, 51), (Comp.FALLDOWN, Comp.LAVA_SPREAD))
+fire = Element(0.2, (0,0,0), (Comp.SPREAD, Comp.FIRE_SPREAD))
 
-print(f"Sand: {sand.__dict__}")
-print(f"Water: {water.__dict__}")
-print(f"Steam: {steam.__dict__}")
-print(f"Acid: {acid.__dict__}")
+sand_enabled = True
+water_enabled = True
+steam_enabled = True
+acid_enabled = True
+lava_enabled = True
+fire_enabled = False
+
+print(f"{colorama.Fore.GREEN if sand_enabled else colorama.Fore.RED}Sand: {colorama.Fore.WHITE}{sand.__dict__}")
+print(f"{colorama.Fore.GREEN if water_enabled else colorama.Fore.RED}Water: {colorama.Fore.WHITE}{water.__dict__}")
+print(f"{colorama.Fore.GREEN if steam_enabled else colorama.Fore.RED}Steam: {colorama.Fore.WHITE}{steam.__dict__}")
+print(f"{colorama.Fore.GREEN if acid_enabled else colorama.Fore.RED}Acid: {colorama.Fore.WHITE}{acid.__dict__}")
+print(f"{colorama.Fore.GREEN if lava_enabled else colorama.Fore.RED}Lava: {colorama.Fore.WHITE}{lava.__dict__}")
+print(f"{colorama.Fore.GREEN if fire_enabled else colorama.Fore.RED}Fire: {colorama.Fore.WHITE}{fire.__dict__}")
 
 def control():
     global mode
