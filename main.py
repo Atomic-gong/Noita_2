@@ -94,6 +94,22 @@ class Particle:
                     buffer_world[self.y * cols + self.x] = None
                     self.x -= 1
                     buffer_world[self.y * cols + self.x] = self
+            elif c == Comp.ACID_SPREAD:
+                if self.x < 1 or self.x > cols - 2 or moved_down: continue
+                if randint(0, 1) == 0:
+                    if buffer_world[(self.y) * cols + self.x + 1] is None:
+                        buffer_world[self.y * cols + self.x] = None
+                        self.x += 1
+                        buffer_world[self.y * cols + self.x] = self
+                    elif not buffer_world[(self.y) * cols + self.x + 1].element == acid:
+                        buffer_world[self.y * cols + self.x] = None
+                        self.x += 1
+                        buffer_world[self.y * cols + self.x] = self
+                        world[self.y * cols + self.x] = None
+                elif buffer_world[(self.y) * cols + self.x - 1] is None:
+                    buffer_world[self.y * cols + self.x] = None
+                    self.x -= 1
+                    buffer_world[self.y * cols + self.x] = self
             else:
                 raise Exception("Incorrect component")
 
@@ -104,10 +120,12 @@ mode = 2
 sand = Element(1.0, (255,236,112), (Comp.FALLDOWN, Comp.SAND_SPREAD))
 water = Element(0.9, (51,102,255), (Comp.FALLDOWN, Comp.WATER_SPREAD))
 steam = Element(0.2, (230,234,240), (Comp.FLOATUP, Comp.STEAM_SPREAD))
+acid = Element(0.2, (0,234,0), (Comp.FALLDOWN, Comp.ACID_SPREAD))
 
 print(f"Sand: {sand.__dict__}")
 print(f"Water: {water.__dict__}")
 print(f"Steam: {steam.__dict__}")
+print(f"Acid: {acid.__dict__}")
 
 def control():
     global mode
@@ -119,6 +137,8 @@ def control():
         mode = 2
     if keys[pygame.K_3]:
         mode = 3
+    if keys[pygame.K_4]:
+        mode = 4
 
     if pygame.mouse.get_pressed()[0] or pygame.mouse.get_pressed()[2]:
         mx, my = pygame.mouse.get_pos()
@@ -134,6 +154,8 @@ def control():
                         world[y*cols + x] = Particle(water, x, y)
                     elif mode == 3:
                         world[y*cols + x] = Particle(steam, x, y)
+                    elif mode == 4:
+                        world[y*cols + x] = Particle(acid, x, y)
 
 print("Entering main loop")
 
