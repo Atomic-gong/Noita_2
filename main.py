@@ -1,3 +1,4 @@
+#cython: language_level=3
 import pygame
 from random import randint
 from enum import Enum, auto
