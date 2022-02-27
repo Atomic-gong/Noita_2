@@ -100,9 +100,9 @@ sand = Element(1.0, (255,236,112), (Comp.FALLDOWN, Comp.SAND_SPREAD))
 water = Element(0.9, (51,102,255), (Comp.FALLDOWN, Comp.WATER_SPREAD))
 steam = Element(0.2, (230,234,240), (Comp.FLOATUP, Comp.STEAM_SPREAD))
 
-print(f"Sand: {sand}")
-print(f"Water: {water}")
-print(f"Steam: {steam}")
+print(f"Sand: {sand.__dict__}")
+print(f"Water: {water.__dict__}")
+print(f"Steam: {steam.__dict__}")
 
 def control():
     global mode
@@ -135,15 +135,13 @@ print("Entering main loop")
 while __name__ == "__main__":
     scr.fill((0,0,0))
     control()
-    #buffer_world = list(reversed(world))
-    buffer_world = []
-    for i in world:
-        buffer_world.append(i)
-    for i in buffer_world:
-        if i == None: continue
-        i.update(buffer_world)
+    rev_world = reversed(world)
+    updated_particles = []
+    for i in rev_world:
+        if i == None or i in updated_particles: continue
+        i.update(world)
+        updated_particles.append(i)
         scr.set_at((i.x, i.y), i.element.colour)
-    world = buffer_world
     for e in pygame.event.get():
         if e.type == pygame.QUIT:
             pygame.quit()
