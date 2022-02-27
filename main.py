@@ -12,6 +12,9 @@ class Comp(Enum):
     SAND_SPREAD = auto()
     WATER_SPREAD = auto()
     STEAM_SPREAD = auto()
+    ACID_SPREAD = auto()
+    LAVA_SPREAD = auto()
+    FIRE_SPREAD = auto()
 
 cols = 640
 rows = 480
@@ -93,6 +96,8 @@ class Particle:
                     buffer_world[self.y * cols + self.x] = self
             else:
                 raise Exception("Incorrect component")
+
+print(f"Comp:\n{Comp.__dict__}\n")
 
 mode = 2
 
