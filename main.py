@@ -1,6 +1,6 @@
 #cython: language_level=3
 import pygame
-from random import randint
+from random import randint, random
 from enum import Enum, auto
 import colorama
 from typing import Tuple
@@ -43,8 +43,9 @@ class Element:
         self.colour = colour[:]
 
 class Particle:
-    def __init__(self, element: Element, x: int, y: int) -> None:
+    def __init__(self, element: Element, x: int, y: int, temp: int) -> None:
         self.element = element
+        self.temp = temp
         self.x = x
         self.y = y
     def update(self, buffer_world):
@@ -89,6 +90,13 @@ class Particle:
                     self.x -= 1
                     buffer_world[self.y * cols + self.x] = self
             elif c == Comp.STEAM_SPREAD:
+                if do_temp:
+                    if ambient_temp_loss:
+                        self.temp -= randint(0,2)
+                    if ambient_temp_spread:
+                        pass
+                    if self.temp < 100:
+                        buffer_world[self.y * cols + self.x] = Particle(water, self.x, self.y, self.temp)
                 if self.x < 1 or self.x > cols - 2: continue
                 if randint(0, 1) == 0:
                     if buffer_world[(self.y) * cols + self.x + 1] is None:
@@ -120,6 +128,17 @@ class Particle:
                         self.x -= 1
                         buffer_world[self.y * cols + self.x] = self
                         world[self.y * cols + self.x] = None
+            elif c == Comp.LAVA_SPREAD:
+                if self.x < 1 or self.x > cols - 2 or moved_down: continue
+                if randint(0, 1) == 0:
+                    if buffer_world[(self.y) * cols + self.x + 1] is None:
+                        buffer_world[self.y * cols + self.x] = None
+                        self.x += 1
+                        buffer_world[self.y * cols + self.x] = self
+                elif buffer_world[(self.y) * cols + self.x - 1] is None:
+                    buffer_world[self.y * cols + self.x] = None
+                    self.x -= 1
+                    buffer_world[self.y * cols + self.x] = self
             else:
                 raise Exception("Incorrect component")
 
@@ -127,11 +146,20 @@ print(f"Comp:\n{Comp.__dict__}\n")
 
 mode = 2
 
-sand = Element(1.0, (255,236,112), (Comp.FALLDOWN, Comp.SAND_SPREAD))
-water = Element(0.9, (51,102,255), (Comp.FALLDOWN, Comp.WATER_SPREAD))
+do_temp = True
+ambient_temp_spread = False
+ambient_temp_loss = True
+
+print(f"do_temp: {do_temp}")
+print(f"ambient_temp_spread: {ambient_temp_spread}")
+print(f"ambient_temp_loss: {ambient_temp_loss}")
+print(f"mode: {mode}")
+
+sand = Element(1.2, (255,236,112), (Comp.FALLDOWN, Comp.SAND_SPREAD))
+water = Element(0.6, (51,102,255), (Comp.FALLDOWN, Comp.WATER_SPREAD))
 steam = Element(0.2, (230,234,240), (Comp.FLOATUP, Comp.STEAM_SPREAD))
-acid = Element(0.2, (0,234,0), (Comp.FALLDOWN, Comp.ACID_SPREAD))
-lava = Element(0.2, (255, 153, 51), (Comp.FALLDOWN, Comp.LAVA_SPREAD))
+acid = Element(1, (0,234,0), (Comp.FALLDOWN, Comp.ACID_SPREAD))
+lava = Element(0.8, (255, 153, 51), (Comp.FALLDOWN, Comp.LAVA_SPREAD))
 fire = Element(0.2, (0,0,0), (Comp.SPREAD, Comp.FIRE_SPREAD))
 
 sand_enabled = True
@@ -160,6 +188,14 @@ def control():
         mode = 3
     if keys[pygame.K_4]:
         mode = 4
+    if keys[pygame.K_5]:
+        mode = 5
+    if keys[pygame.K_6]:
+        mode = 6
+    if keys[pygame.K_7]:
+        mode = 7
+    if keys[pygame.K_8]:
+        mode = 8
 
     if pygame.mouse.get_pressed()[0] or pygame.mouse.get_pressed()[2]:
         mx, my = pygame.mouse.get_pos()
@@ -169,14 +205,18 @@ def control():
                 if pygame.mouse.get_pressed()[2]:
                     world[y*cols + x] = None
                 else:
-                    if mode == 1:
-                        world[y*cols + x] = Particle(sand, x, y)
-                    elif mode == 2:
-                        world[y*cols + x] = Particle(water, x, y)
-                    elif mode == 3:
-                        world[y*cols + x] = Particle(steam, x, y)
-                    elif mode == 4:
-                        world[y*cols + x] = Particle(acid, x, y)
+                    if mode == 1 and sand_enabled:
+                        world[y*cols + x] = Particle(sand, x, y, 10)
+                    elif mode == 2 and water_enabled:
+                        world[y*cols + x] = Particle(water, x, y, 20)
+                    elif mode == 3 and steam_enabled:
+                        world[y*cols + x] = Particle(steam, x, y, 110)
+                    elif mode == 4 and acid_enabled:
+                        world[y*cols + x] = Particle(acid, x, y, 60)
+                    elif mode == 5 and lava_enabled:
+                        world[y*cols + x] = Particle(lava, x, y, 800)
+                    elif mode == 6 and fire_enabled:
+                        world[y*cols + x] = Particle(fire, x, y, 600)
 
 print("Entering main loop")
 
