@@ -110,6 +110,11 @@ class Particle:
                     buffer_world[self.y * cols + self.x] = None
                     self.x -= 1
                     buffer_world[self.y * cols + self.x] = self
+                elif not buffer_world[(self.y) * cols + self.x - 1].element == acid:
+                        buffer_world[self.y * cols + self.x] = None
+                        self.x -= 1
+                        buffer_world[self.y * cols + self.x] = self
+                        world[self.y * cols + self.x] = None
             else:
                 raise Exception("Incorrect component")
 
