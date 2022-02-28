@@ -250,7 +250,7 @@ mode = 2
 
 do_temp = True
 ambient_temp_spread = False
-ambient_temp_loss = True
+ambient_temp_loss = False
 
 print(f"do_temp: {do_temp}")
 print(f"ambient_temp_spread: {ambient_temp_spread}")
