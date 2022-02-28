@@ -3,6 +3,7 @@ from curses.ascii import ESC
 from threading import Thread
 from time import sleep
 import pygame
+import numpy
 from random import randint, random
 from enum import Enum, auto
 import colorama
@@ -118,15 +119,22 @@ class Particle:
                     if self.temp > 99:
                         buffer_world[self.y * cols + self.x] = Particle(steam, self.x, self.y, self.temp)
                 if self.x < 1 or self.x > cols - 2 or moved_down: continue
-                if randint(0, 1) == 0:
-                    if buffer_world[(self.y) * cols + self.x + 1] is None:
+                x_offset = 1
+                max_offset = 10
+                found_spot = False
+                while not found_spot and x_offset < max_offset and self.x + x_offset < cols-1 and self.x - x_offset > 1:
+                    if randint(0,3) == 0:
+                        if buffer_world[(self.y) * cols + self.x + x_offset] is None:
+                            buffer_world[self.y * cols + self.x] = None
+                            self.x += x_offset
+                            found_spot = True
+                            buffer_world[self.y * cols + self.x] = self
+                    elif buffer_world[(self.y) * cols + self.x - x_offset] is None:
                         buffer_world[self.y * cols + self.x] = None
-                        self.x += 1
+                        self.x -= x_offset
+                        found_spot = True
                         buffer_world[self.y * cols + self.x] = self
-                elif buffer_world[(self.y) * cols + self.x - 1] is None:
-                    buffer_world[self.y * cols + self.x] = None
-                    self.x -= 1
-                    buffer_world[self.y * cols + self.x] = self
+                    x_offset += 1
             elif c == Comp.STEAM_SPREAD:
                 if do_temp:
                     if not buffer_world[self.y-1 * cols + self.x] == None:
