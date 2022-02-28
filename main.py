@@ -18,15 +18,17 @@ class Comp(Enum):
     FALLDOWN = auto()
     FLOATUP = auto()
     SPREAD = auto()
+    STATIC = auto()
     SAND_SPREAD = auto()
     WATER_SPREAD = auto()
     STEAM_SPREAD = auto()
     ACID_SPREAD = auto()
     LAVA_SPREAD = auto()
     FIRE_SPREAD = auto()
+    STONE_SPREAD = auto()
 
-cols = 640
-rows = 480
+cols = 350
+rows = 350
 res = (cols, rows)
 print(f"Screen res: {res}")
 
@@ -41,10 +43,11 @@ brush_size = 20
 print(f"Brush size: {brush_size}")
 
 class Element:
-    def __init__(self, density: float, colour: Tuple, comps: Tuple[Comp]) -> None:
+    def __init__(self, density: float, colour: Tuple, comps: Tuple[Comp], visc: int) -> None:
         self.density = density
         self.comps = comps[:]
         self.colour = colour[:]
+        self.visc = visc
 
 class Particle:
     def __init__(self, element: Element, x: int, y: int, temp: int) -> None:
@@ -56,7 +59,9 @@ class Particle:
         moved_down = False
 
         for c in self.element.comps:
-            if c == Comp.FALLDOWN:
+            if c == Comp.STATIC:
+                continue
+            elif c == Comp.FALLDOWN:
                 if self.y > 0:
                     if not buffer_world[self.y+1 * cols + self.x] == None:
                         i = buffer_world[self.y+1 * cols + self.x]
@@ -120,7 +125,7 @@ class Particle:
                         buffer_world[self.y * cols + self.x] = Particle(steam, self.x, self.y, self.temp)
                 if self.x < 1 or self.x > cols - 2 or moved_down: continue
                 x_offset = 1
-                max_offset = 10
+                max_offset = self.element.visc
                 found_spot = False
                 while not found_spot and x_offset < max_offset and self.x + x_offset < cols-1 and self.x - x_offset > 1:
                     if randint(0,3) == 0:
@@ -160,15 +165,22 @@ class Particle:
                     if self.temp < 100:
                         buffer_world[self.y * cols + self.x] = Particle(water, self.x, self.y, self.temp)
                 if self.x < 1 or self.x > cols - 2: continue
-                if randint(0, 1) == 0:
-                    if buffer_world[(self.y) * cols + self.x + 1] is None:
+                x_offset = 1
+                max_offset = self.element.visc
+                found_spot = False
+                while not found_spot and x_offset < max_offset and self.x + x_offset < cols-1 and self.x - x_offset > 1:
+                    if randint(0,3) == 0:
+                        if buffer_world[(self.y) * cols + self.x + x_offset] is None:
+                            buffer_world[self.y * cols + self.x] = None
+                            self.x += x_offset
+                            found_spot = True
+                            buffer_world[self.y * cols + self.x] = self
+                    elif buffer_world[(self.y) * cols + self.x - x_offset] is None:
                         buffer_world[self.y * cols + self.x] = None
-                        self.x += 1
+                        self.x -= x_offset
+                        found_spot = True
                         buffer_world[self.y * cols + self.x] = self
-                elif buffer_world[(self.y) * cols + self.x - 1] is None:
-                    buffer_world[self.y * cols + self.x] = None
-                    self.x -= 1
-                    buffer_world[self.y * cols + self.x] = self
+                    x_offset += 1
             elif c == Comp.ACID_SPREAD:
                 if do_temp:
                     if not buffer_world[self.y-1 * cols + self.x] == None:
@@ -192,25 +204,56 @@ class Particle:
                     if ambient_temp_spread:
                         pass
                 if self.x < 1 or self.x > cols - 2 or moved_down: continue
-                if randint(0, 1) == 0:
-                    if buffer_world[(self.y) * cols + self.x + 1] is None:
+                x_offset = 1
+                max_offset = self.element.visc
+                found_spot = False
+                while not found_spot and x_offset < max_offset and self.x + x_offset < cols-1 and self.x - x_offset > 1:
+                    if randint(0, 3) == 0:
+                        if buffer_world[(self.y) * cols + self.x + x_offset] is None:
+                            buffer_world[self.y * cols + self.x] = None
+                            self.x += x_offset
+                            buffer_world[self.y * cols + self.x] = self
+                        elif not buffer_world[(self.y) * cols + self.x + x_offset].element == acid:
+                            buffer_world[self.y * cols + self.x] = None
+                            self.x += x_offset
+                            buffer_world[self.y * cols + self.x] = self
+                            world[self.y * cols + self.x] = None
+                    elif buffer_world[(self.y) * cols + self.x - x_offset] is None:
                         buffer_world[self.y * cols + self.x] = None
-                        self.x += 1
+                        self.x -= x_offset
                         buffer_world[self.y * cols + self.x] = self
-                    elif not buffer_world[(self.y) * cols + self.x + 1].element == acid:
-                        buffer_world[self.y * cols + self.x] = None
-                        self.x += 1
-                        buffer_world[self.y * cols + self.x] = self
-                        world[self.y * cols + self.x] = None
-                elif buffer_world[(self.y) * cols + self.x - 1] is None:
-                    buffer_world[self.y * cols + self.x] = None
-                    self.x -= 1
-                    buffer_world[self.y * cols + self.x] = self
-                elif not buffer_world[(self.y) * cols + self.x - 1].element == acid:
-                        buffer_world[self.y * cols + self.x] = None
-                        self.x -= 1
-                        buffer_world[self.y * cols + self.x] = self
-                        world[self.y * cols + self.x] = None
+                    elif not buffer_world[(self.y) * cols + self.x - x_offset].element == acid:
+                            buffer_world[self.y * cols + self.x] = None
+                            self.x -= x_offset
+                            buffer_world[self.y * cols + self.x] = self
+                            world[self.y * cols + self.x] = None
+                    x_offset += 1
+            elif c == Comp.STONE_SPREAD:
+                if do_temp:
+                    if not buffer_world[self.y-1 * cols + self.x] == None:
+                        if buffer_world[self.y-1 * cols + self.x].temp < self.temp:
+                            buffer_world[self.y-1 * cols + self.x].temp += (self.temp - buffer_world[self.y-1 * cols + self.x].temp)/2
+                            self.temp -= (self.temp - buffer_world[self.y-1 * cols + self.x].temp)/2
+                    if not buffer_world[self.y+1 * cols + self.x] == None:
+                        if buffer_world[self.y+1 * cols + self.x].temp < self.temp:
+                            buffer_world[self.y+1 * cols + self.x].temp += (self.temp - buffer_world[self.y+1 * cols + self.x].temp)/2
+                            self.temp -= (self.temp - buffer_world[self.y+1 * cols + self.x].temp)/2
+                    if self.x < cols:
+                        if not buffer_world[self.y * cols + self.x+1] == None:
+                            if buffer_world[self.y * cols + self.x+1].temp < self.temp:
+                                buffer_world[self.y * cols + self.x+1].temp += (self.temp - buffer_world[self.y * cols + self.x+1].temp)/2
+                                self.temp -= (self.temp - buffer_world[self.y * cols + self.x+1].temp)/2
+                    if self.x > 0:
+                        if not buffer_world[self.y * cols + self.x-1] == None:
+                            if buffer_world[self.y * cols + self.x-1].temp < self.temp:
+                                buffer_world[self.y * cols + self.x-1].temp += (self.temp - buffer_world[self.y * cols + self.x-1].temp)/2
+                                self.temp -= (self.temp - buffer_world[self.y * cols + self.x-1].temp)/2
+                    if ambient_temp_loss:
+                        self.temp -= randint(0,2)
+                    if ambient_temp_spread:
+                        pass
+                    if self.temp > 699:
+                        buffer_world[self.y * cols + self.x] = Particle(lava, self.x, self.y, self.temp)
             elif c == Comp.LAVA_SPREAD:
                 if do_temp:
                     if not buffer_world[self.y-1 * cols + self.x] == None:
@@ -234,15 +277,22 @@ class Particle:
                     if ambient_temp_spread:
                         pass
                 if self.x < 1 or self.x > cols - 2 or moved_down: continue
-                if randint(0, 1) == 0:
-                    if buffer_world[(self.y) * cols + self.x + 1] is None:
+                x_offset = 1
+                max_offset = self.element.visc
+                found_spot = False
+                while not found_spot and x_offset < max_offset and self.x + x_offset < cols-1 and self.x - x_offset > 1:
+                    if randint(0,4) == 1:
+                        if buffer_world[(self.y) * cols + self.x + x_offset] is None:
+                            buffer_world[self.y * cols + self.x] = None
+                            self.x += x_offset
+                            found_spot = True
+                            buffer_world[self.y * cols + self.x] = self
+                    elif buffer_world[(self.y) * cols + self.x - x_offset] is None:
                         buffer_world[self.y * cols + self.x] = None
-                        self.x += 1
+                        self.x -= x_offset
+                        found_spot = True
                         buffer_world[self.y * cols + self.x] = self
-                elif buffer_world[(self.y) * cols + self.x - 1] is None:
-                    buffer_world[self.y * cols + self.x] = None
-                    self.x -= 1
-                    buffer_world[self.y * cols + self.x] = self
+                    x_offset += 1
             else:
                 raise Exception("Incorrect component")
 
@@ -265,12 +315,13 @@ print(f"ambient_temp_spread: {ambient_temp_spread}")
 print(f"ambient_temp_loss: {ambient_temp_loss}")
 print(f"mode: {mode}")
 
-sand = Element(1.2, (255,236,112), (Comp.FALLDOWN, Comp.SAND_SPREAD))
-water = Element(0.6, (51,102,255), (Comp.FALLDOWN, Comp.WATER_SPREAD))
-steam = Element(0.2, (230,234,240), (Comp.FLOATUP, Comp.STEAM_SPREAD))
-acid = Element(1, (0,234,0), (Comp.FALLDOWN, Comp.ACID_SPREAD))
-lava = Element(0.8, (255, 153, 51), (Comp.FALLDOWN, Comp.LAVA_SPREAD))
-fire = Element(0.2, (0,0,0), (Comp.SPREAD, Comp.FIRE_SPREAD))
+sand = Element(1.2, (255,236,112), (Comp.FALLDOWN, Comp.SAND_SPREAD), 0)
+water = Element(0.6, (51,102,255), (Comp.FALLDOWN, Comp.WATER_SPREAD), 10)
+steam = Element(0.2, (230,234,240), (Comp.FLOATUP, Comp.STEAM_SPREAD), 25)
+acid = Element(1, (0,234,0), (Comp.FALLDOWN, Comp.ACID_SPREAD), 3)
+lava = Element(0.8, (255, 153, 51), (Comp.FALLDOWN, Comp.LAVA_SPREAD), 8)
+stone = Element(2, (110, 110, 110), (Comp.STATIC, Comp.STONE_SPREAD), 0)
+fire = Element(0.2, (0,0,0), (Comp.SPREAD, Comp.FIRE_SPREAD), 0)
 
 sand_enabled = True
 water_enabled = True
@@ -309,8 +360,8 @@ def control():
 
     if pygame.mouse.get_pressed()[0] or pygame.mouse.get_pressed()[2]:
         mx, my = pygame.mouse.get_pos()
-        for x in range(max(0, mx - brush_size), min(cols - 1, mx + brush_size)):
-            for y in range(max(0, my - brush_size), min(rows - 1, my + brush_size)):
+        for x in range(max(0, mx - brush_size), min(cols, mx + brush_size)):
+            for y in range(max(0, my - brush_size), min(rows, my + brush_size)):
                 if (mx - x) ** 2 + (my - y) ** 2 > brush_size ** 2: continue
                 if pygame.mouse.get_pressed()[2]:
                     world[y*cols + x] = None
@@ -325,7 +376,9 @@ def control():
                         world[y*cols + x] = Particle(acid, x, y, 60)
                     elif mode == 5 and lava_enabled:
                         world[y*cols + x] = Particle(lava, x, y, 800)
-                    elif mode == 6 and fire_enabled:
+                    elif mode == 6:
+                        world[y*cols + x] = Particle(stone, x, y, 20)
+                    elif mode == 7 and fire_enabled:
                         world[y*cols + x] = Particle(fire, x, y, 600)
 
 def debug_console():
