@@ -56,6 +56,12 @@ class Particle:
 
         for c in self.element.comps:
             if c == Comp.FALLDOWN:
+                if self.y > 0:
+                    if not buffer_world[self.y+1 * cols + self.x] == None:
+                        i = buffer_world[self.y+1 * cols + self.x]
+                        if i.element.density < self.element.density:
+                            buffer_world[self.y+1 * cols + self.x] = self
+                            buffer_world[self.y * cols + self.x] = i
                 if self.y >= rows - 1: continue
                 if buffer_world[(self.y + 1) * cols + self.x] is not None: continue
                 buffer_world[self.y * cols + self.x] = None
@@ -63,6 +69,12 @@ class Particle:
                 moved_down = True
                 buffer_world[self.y * cols + self.x] = self
             elif c == Comp.FLOATUP:
+                if self.y > 0:
+                    if not buffer_world[self.y+1 * cols + self.x] == None:
+                        i = buffer_world[self.y+1 * cols + self.x]
+                        if i.element.density < self.element.density:
+                            buffer_world[self.y+1 * cols + self.x] = self
+                            buffer_world[self.y * cols + self.x] = i
                 if self.y <= 0: continue
                 if buffer_world[(self.y - 1) * cols + self.x] is not None: continue
                 buffer_world[self.y * cols + self.x] = None
