@@ -1,4 +1,7 @@
 #cython: language_level=3
+from curses.ascii import ESC
+from threading import Thread
+from time import sleep
 import pygame
 from random import randint, random
 from enum import Enum, auto
@@ -79,6 +82,29 @@ class Particle:
                     self.y += 1
                     buffer_world[self.y * cols + self.x] = self
             elif c == Comp.WATER_SPREAD:
+                if do_temp:
+                    if not buffer_world[self.y-1 * cols + self.x] == None:
+                        if buffer_world[self.y-1 * cols + self.x].temp < self.temp:
+                            buffer_world[self.y-1 * cols + self.x].temp += (self.temp - buffer_world[self.y-1 * cols + self.x].temp)/2
+                            self.temp -= (self.temp - buffer_world[self.y-1 * cols + self.x].temp)/2
+                    if not buffer_world[self.y+1 * cols + self.x] == None:
+                        if buffer_world[self.y+1 * cols + self.x].temp < self.temp:
+                            buffer_world[self.y+1 * cols + self.x].temp += (self.temp - buffer_world[self.y+1 * cols + self.x].temp)/2
+                            self.temp -= (self.temp - buffer_world[self.y+1 * cols + self.x].temp)/2
+                    if not buffer_world[self.y * cols + self.x+1] == None:
+                        if buffer_world[self.y * cols + self.x+1].temp < self.temp:
+                            buffer_world[self.y * cols + self.x+1].temp += (self.temp - buffer_world[self.y * cols + self.x+1].temp)/2
+                            self.temp -= (self.temp - buffer_world[self.y * cols + self.x+1].temp)/2
+                    if not buffer_world[self.y * cols + self.x-1] == None:
+                        if buffer_world[self.y * cols + self.x-1].temp < self.temp:
+                            buffer_world[self.y * cols + self.x-1].temp += (self.temp - buffer_world[self.y * cols + self.x-1].temp)/2
+                            self.temp -= (self.temp - buffer_world[self.y * cols + self.x-1].temp)/2
+                    if ambient_temp_loss:
+                        self.temp -= randint(0,2)
+                    if ambient_temp_spread:
+                        pass
+                    if self.temp > 99:
+                        buffer_world[self.y * cols + self.x] = Particle(steam, self.x, self.y, self.temp)
                 if self.x < 1 or self.x > cols - 2 or moved_down: continue
                 if randint(0, 1) == 0:
                     if buffer_world[(self.y) * cols + self.x + 1] is None:
@@ -91,6 +117,22 @@ class Particle:
                     buffer_world[self.y * cols + self.x] = self
             elif c == Comp.STEAM_SPREAD:
                 if do_temp:
+                    if not buffer_world[self.y-1 * cols + self.x] == None:
+                        if buffer_world[self.y-1 * cols + self.x].temp < self.temp:
+                            buffer_world[self.y-1 * cols + self.x].temp += (self.temp - buffer_world[self.y-1 * cols + self.x].temp)/2
+                            self.temp -= (self.temp - buffer_world[self.y-1 * cols + self.x].temp)/2
+                    if not buffer_world[self.y+1 * cols + self.x] == None:
+                        if buffer_world[self.y+1 * cols + self.x].temp < self.temp:
+                            buffer_world[self.y+1 * cols + self.x].temp += (self.temp - buffer_world[self.y+1 * cols + self.x].temp)/2
+                            self.temp -= (self.temp - buffer_world[self.y+1 * cols + self.x].temp)/2
+                    if not buffer_world[self.y * cols + self.x+1] == None:
+                        if buffer_world[self.y * cols + self.x+1].temp < self.temp:
+                            buffer_world[self.y * cols + self.x+1].temp += (self.temp - buffer_world[self.y * cols + self.x+1].temp)/2
+                            self.temp -= (self.temp - buffer_world[self.y * cols + self.x+1].temp)/2
+                    if not buffer_world[self.y * cols + self.x-1] == None:
+                        if buffer_world[self.y * cols + self.x-1].temp < self.temp:
+                            buffer_world[self.y * cols + self.x-1].temp += (self.temp - buffer_world[self.y * cols + self.x-1].temp)/2
+                            self.temp -= (self.temp - buffer_world[self.y * cols + self.x-1].temp)/2
                     if ambient_temp_loss:
                         self.temp -= randint(0,2)
                     if ambient_temp_spread:
@@ -108,6 +150,27 @@ class Particle:
                     self.x -= 1
                     buffer_world[self.y * cols + self.x] = self
             elif c == Comp.ACID_SPREAD:
+                if do_temp:
+                    if not buffer_world[self.y-1 * cols + self.x] == None:
+                        if buffer_world[self.y-1 * cols + self.x].temp < self.temp:
+                            buffer_world[self.y-1 * cols + self.x].temp += (self.temp - buffer_world[self.y-1 * cols + self.x].temp)/2
+                            self.temp -= (self.temp - buffer_world[self.y-1 * cols + self.x].temp)/2
+                    if not buffer_world[self.y+1 * cols + self.x] == None:
+                        if buffer_world[self.y+1 * cols + self.x].temp < self.temp:
+                            buffer_world[self.y+1 * cols + self.x].temp += (self.temp - buffer_world[self.y+1 * cols + self.x].temp)/2
+                            self.temp -= (self.temp - buffer_world[self.y+1 * cols + self.x].temp)/2
+                    if not buffer_world[self.y * cols + self.x+1] == None:
+                        if buffer_world[self.y * cols + self.x+1].temp < self.temp:
+                            buffer_world[self.y * cols + self.x+1].temp += (self.temp - buffer_world[self.y * cols + self.x+1].temp)/2
+                            self.temp -= (self.temp - buffer_world[self.y * cols + self.x+1].temp)/2
+                    if not buffer_world[self.y * cols + self.x-1] == None:
+                        if buffer_world[self.y * cols + self.x-1].temp < self.temp:
+                            buffer_world[self.y * cols + self.x-1].temp += (self.temp - buffer_world[self.y * cols + self.x-1].temp)/2
+                            self.temp -= (self.temp - buffer_world[self.y * cols + self.x-1].temp)/2
+                    if ambient_temp_loss:
+                        self.temp -= randint(0,2)
+                    if ambient_temp_spread:
+                        pass
                 if self.x < 1 or self.x > cols - 2 or moved_down: continue
                 if randint(0, 1) == 0:
                     if buffer_world[(self.y) * cols + self.x + 1] is None:
@@ -129,6 +192,27 @@ class Particle:
                         buffer_world[self.y * cols + self.x] = self
                         world[self.y * cols + self.x] = None
             elif c == Comp.LAVA_SPREAD:
+                if do_temp:
+                    if not buffer_world[self.y-1 * cols + self.x] == None:
+                        if buffer_world[self.y-1 * cols + self.x].temp < self.temp:
+                            buffer_world[self.y-1 * cols + self.x].temp += (self.temp - buffer_world[self.y-1 * cols + self.x].temp)/2
+                            self.temp -= (self.temp - buffer_world[self.y-1 * cols + self.x].temp)/2
+                    if not buffer_world[self.y+1 * cols + self.x] == None:
+                        if buffer_world[self.y+1 * cols + self.x].temp < self.temp:
+                            buffer_world[self.y+1 * cols + self.x].temp += (self.temp - buffer_world[self.y+1 * cols + self.x].temp)/2
+                            self.temp -= (self.temp - buffer_world[self.y+1 * cols + self.x].temp)/2
+                    if not buffer_world[self.y * cols + self.x+1] == None:
+                        if buffer_world[self.y * cols + self.x+1].temp < self.temp:
+                            buffer_world[self.y * cols + self.x+1].temp += (self.temp - buffer_world[self.y * cols + self.x+1].temp)/2
+                            self.temp -= (self.temp - buffer_world[self.y * cols + self.x+1].temp)/2
+                    if not buffer_world[self.y * cols + self.x-1] == None:
+                        if buffer_world[self.y * cols + self.x-1].temp < self.temp:
+                            buffer_world[self.y * cols + self.x-1].temp += (self.temp - buffer_world[self.y * cols + self.x-1].temp)/2
+                            self.temp -= (self.temp - buffer_world[self.y * cols + self.x-1].temp)/2
+                    if ambient_temp_loss:
+                        self.temp -= randint(0,2)
+                    if ambient_temp_spread:
+                        pass
                 if self.x < 1 or self.x > cols - 2 or moved_down: continue
                 if randint(0, 1) == 0:
                     if buffer_world[(self.y) * cols + self.x + 1] is None:
@@ -143,6 +227,12 @@ class Particle:
                 raise Exception("Incorrect component")
 
 print(f"Comp:\n{Comp.__dict__}\n")
+
+running = True
+print(f"End program var 'running' is set to {running}")
+
+frame_tick_display = False
+print(f"Debug var 'frame_tick_display' is set to {frame_tick_display}")
 
 mode = 2
 
@@ -218,9 +308,74 @@ def control():
                     elif mode == 6 and fire_enabled:
                         world[y*cols + x] = Particle(fire, x, y, 600)
 
+def debug_console():
+    global running, frame_tick_display
+    do_extra_info = False
+    while True:
+        keys = pygame.key.get_pressed()
+        if keys[ESC]:
+            frame_tick_display = False
+        inpt = input("> ")
+        if inpt == "exit":
+            running = False
+            exit()
+        elif inpt == "frame_tick_display":
+            print("PRESS ESC TO STOP")
+            frame_tick_display = not frame_tick_display
+        elif inpt == "ex_info":
+            do_extra_info = not do_extra_info
+        elif inpt == "var get":
+            var_name = input("Var name: ")
+            try:
+                try:
+                    print(f"Var value: {globals()[var_name].__dict__}")
+                except:
+                    print(f"Var value: {globals()[var_name]}")
+                    print(f"Var type: {type(globals()[var_name])}")
+            except:
+                print(f"{colorama.Fore.RED} INCORRECT VARIABLE NAME{colorama.Fore.RESET}")
+        elif inpt == "var set":
+            var_name = input("Var name: ")
+            var_type = input("Var type (int,float,bool,str): ")
+            var_value = input("New var value: ")
+            try:
+                didfail = False
+                if do_extra_info:
+                    temp_val = globals()[var_name]
+                if var_type == "int":
+                    var_value = int(var_value)
+                elif var_type == "float":
+                    var_value = float(var_value)
+                elif var_type == "bool":
+                    var_value = bool(var_value)
+                elif var_type == "str":
+                    pass
+                else:
+                    print(f"{colorama.Fore.RED} INCORRECT TYPE{colorama.Fore.RESET}")
+                    didfail = True
+                    
+                if not didfail:
+                    globals()[var_name] = var_value
+                    print(f"{colorama.Fore.GREEN} Var set successfully. {colorama.Fore.RESET}")
+                    if do_extra_info:
+                        print(f"Registered var name: {var_name}")
+                        print(f"New var value: {var_value}")
+                        print(f"Old var value: {temp_val}")
+                        print(f"New var type: {type(globals()[var_name])}")
+            except:
+                print(f"{colorama.Fore.RED} VAR SET FAILED{colorama.Fore.RESET}")
+
 print("Entering main loop")
 
-while __name__ == "__main__":
+print("Starting debug console")
+debug_thread = Thread(target=debug_console)
+print(f"Debug thread: {debug_thread}")
+try:
+    debug_thread.start()
+except:
+    print(f"{colorama.Fore.RED} DEBUG THREAD FAILED {colorama.Fore.RESET}")
+
+while running:
     scr.fill((0,0,0))
     control()
     rev_world = reversed(world)
@@ -231,7 +386,12 @@ while __name__ == "__main__":
         updated_particles.append(i)
         scr.set_at((i.x, i.y), i.element.colour)
     for e in pygame.event.get():
-        if e.type == pygame.QUIT:
+        if e.type == pygame.QUIT or not running:
             pygame.quit()
             exit()
     pygame.display.flip()
+    if frame_tick_display:
+        print("Tick")
+
+pygame.quit()
+exit()
